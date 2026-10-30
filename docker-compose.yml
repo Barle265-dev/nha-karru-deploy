@@ -3,13 +3,13 @@ services:
     image: postgres:17-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_USER: postgres
+      POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: nha_karru
+      POSTGRES_DB: ${DB_DATABASE}
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d nha_karru"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_DATABASE}"]
       interval: 5s
       timeout: 3s
       retries: 10
@@ -20,24 +20,7 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    environment:
-      NODE_ENV: production
-      TZ: UTC
-      HOST: 0.0.0.0
-      PORT: 3333
-      LOG_LEVEL: info
-      APP_KEY: ${APP_KEY}
-      APP_URL: ${APP_URL}
-      APP_TIMEZONE: Atlantic/Cape_Verde
-      CORS_ORIGIN: ${APP_URL}
-      DB_HOST: db
-      DB_PORT: 5432
-      DB_USER: postgres
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_DATABASE: nha_karru
-      LIMITER_STORE: database
-      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
-      FRONTEND_URL: ${APP_URL}
+    env_file: .env
 
   migrate:
     image: ghcr.io/barle265-dev/nha-karru-backend:latest
@@ -45,20 +28,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    env_file: .env
     command: node ace migration:run --force
-    environment:
-      NODE_ENV: production
-      HOST: 0.0.0.0
-      PORT: 3333
-      LOG_LEVEL: info
-      APP_KEY: ${APP_KEY}
-      APP_URL: ${APP_URL}
-      DB_HOST: db
-      DB_PORT: 5432
-      DB_USER: postgres
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_DATABASE: nha_karru
-      LIMITER_STORE: database
 
   frontend:
     image: ghcr.io/barle265-dev/nha-karru-frontend:latest
